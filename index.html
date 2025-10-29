@@ -222,10 +222,10 @@
                     </div>
 
                     <div class="flex gap-4 pt-2">
-                        <button id="save-contact-btn" class="flex-1 bg-blue-600 text-white font-medium py-2 px-4 rounded-xl hover:bg-blue-700 transition duration-200 uppercase">
+                        <button id="save-contact-btn" class="flex items-center justify-center flex-1 bg-blue-600 text-white font-medium py-2 px-4 rounded-xl hover:bg-blue-700 transition duration-200 uppercase">
                             Simpan
                         </button>
-                        <button id="cancel-edit-btn" class="flex-1 bg-gray-500 text-white font-medium py-2 px-4 rounded-xl hover:bg-gray-600 transition duration-200 uppercase">
+                        <button id="cancel-edit-btn" class="flex items-center justify-center flex-1 bg-gray-500 text-white font-medium py-2 px-4 rounded-xl hover:bg-gray-600 transition duration-200 uppercase">
                             Batal
                         </button>
                     </div>
@@ -1061,10 +1061,14 @@ N:${lastName};${firstName};;;
         // === Inisialisasi Aplikasi ===
         document.addEventListener('DOMContentLoaded', async () => {
             // Inisialisasi Flatpickr
+            // Terapkan lokalisasi Bahasa Indonesia secara manual
+            if (flatpickr.l10ns.id) {
+                flatpickr.localize(flatpickr.l10ns.id);
+            }
+
             flatpickr("#form-tanggal", {
-                dateFormat: "d-m-Y", // Format yang disimpan di database
-                locale: "id",       // Bahasa Indonesia
-                allowInput: true,   // Izinkan ketik manual
+                dateFormat: "d-m-Y",
+                allowInput: true,
             });
 
             // BARU: Muat Kunci API dari localStorage
