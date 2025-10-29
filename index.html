@@ -4,12 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pemindai Kartu Nama (OCR)</title>
+    <!-- Memuat Flatpickr (Kalender) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Memuat Tesseract.js (v5) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
     <!-- Memuat JSZip (untuk VCF zip) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Memuat Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
     <style>
         /* Menggunakan font Inter */
         body {
@@ -208,7 +214,7 @@
                     </div>
                     <div>
                         <label for="form-tanggal" class="block text-sm font-medium text-gray-300 mb-1">Tanggal</label>
-                        <input type="text" id="form-tanggal" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500" placeholder="DDMMYYYY">
+                        <input type="text" id="form-tanggal" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500" placeholder="DD-MM-YYYY">
                     </div>
                     <div>
                         <label for="form-catatan" class="block text-sm font-medium text-gray-300 mb-1">Catatan</label>
@@ -1054,6 +1060,13 @@ N:${lastName};${firstName};;;
 
         // === Inisialisasi Aplikasi ===
         document.addEventListener('DOMContentLoaded', async () => {
+            // Inisialisasi Flatpickr
+            flatpickr("#form-tanggal", {
+                dateFormat: "d-m-Y", // Format yang disimpan di database
+                locale: "id",       // Bahasa Indonesia
+                allowInput: true,   // Izinkan ketik manual
+            });
+
             // BARU: Muat Kunci API dari localStorage
             const savedApiKey = localStorage.getItem('geminiApiKey');
             if (savedApiKey) {
