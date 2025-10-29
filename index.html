@@ -195,6 +195,19 @@
                         <input type="email" id="form-email" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
+                    <div>
+                        <label for="form-acara" class="block text-sm font-medium text-gray-300 mb-1">Acara</label>
+                        <input type="text" id="form-acara" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="form-tanggal" class="block text-sm font-medium text-gray-300 mb-1">Tanggal</label>
+                        <input type="text" id="form-tanggal" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500" placeholder="DDMMYYYY">
+                    </div>
+                    <div>
+                        <label for="form-catatan" class="block text-sm font-medium text-gray-300 mb-1">Catatan</label>
+                        <textarea id="form-catatan" rows="3" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+
                     <div class="flex gap-4 pt-2">
                         <button id="save-contact-btn" class="flex-1 bg-blue-600 text-white font-medium py-2 px-4 rounded-xl hover:bg-blue-700 transition duration-200">
                             Simpan
@@ -299,6 +312,9 @@
         const formTelpHp = document.getElementById('form-telp-hp');
         const formEmail = document.getElementById('form-email');
         const contactIdInput = document.getElementById('contact-id');
+        const formAcara = document.getElementById('form-acara');
+        const formTanggal = document.getElementById('form-tanggal');
+        const formCatatan = document.getElementById('form-catatan');
 
         // === Referensi DOM Ekspor ===
         const selectAllCheckbox = document.getElementById('select-all-contacts');
@@ -668,6 +684,9 @@ Contoh JSON:
             formTelpKantor.value = '';
             formTelpHp.value = '';
             formEmail.value = '';
+            formAcara.value = '';
+            formTanggal.value = '';
+            formCatatan.value = '';
         }
         
         async function saveContact() {
@@ -679,7 +698,10 @@ Contoh JSON:
                 perusahaan: formPerusahaan.value,
                 telp_kantor: formTelpKantor.value,
                 telp_hp: formTelpHp.value,
-                email: formEmail.value
+                email: formEmail.value,
+                acara: formAcara.value,
+                tanggal: formTanggal.value,
+                catatan: formCatatan.value,
             };
             
             const contactId = contactIdInput.value ? parseInt(contactIdInput.value, 10) : null;
@@ -780,6 +802,11 @@ Contoh JSON:
                     <p class="text-sm text-gray-300 truncate">${contact.jabatan || '(Tanpa Jabatan)'} di ${contact.perusahaan || '(Tanpa Perusahaan)'}</p>
                     <p class="text-sm text-gray-400 truncate">${contact.email || ''}</p>
                     <p class="text-sm text-gray-400 truncate">HP: ${contact.telp_hp || '-'} | Kantor: ${contact.telp_kantor || '-'}</p>
+                    <div class="mt-2 pt-2 border-t border-gray-600">
+                        <p class="text-xs text-gray-300"><strong class="font-semibold">Acara:</strong> ${contact.acara || '-'}</p>
+                        <p class="text-xs text-gray-300"><strong class="font-semibold">Tanggal:</strong> ${contact.tanggal || '-'}</p>
+                        <p class="text-xs text-gray-300"><strong class="font-semibold">Catatan:</strong> ${contact.catatan || '-'}</p>
+                    </div>
                 `;
                 card.appendChild(infoDiv);
 
@@ -815,6 +842,9 @@ Contoh JSON:
                     formTelpKantor.value = contact.telp_kantor;
                     formTelpHp.value = contact.telp_hp;
                     formEmail.value = contact.email;
+                    formAcara.value = contact.acara || '';
+                    formTanggal.value = contact.tanggal || '';
+                    formCatatan.value = contact.catatan || '';
                     
                     ocrResultCard.classList.add('hidden');
                     editFormCard.classList.remove('hidden');
@@ -878,7 +908,7 @@ Contoh JSON:
 
         // === FUNGSI LOGIKA EKSPOR ===
         function generateCSV(contacts) {
-            const headers = ['Nama', 'Jabatan', 'Perusahaan', 'Telp Kantor', 'Telp HP/WA', 'Email'];
+            const headers = ['Nama', 'Jabatan', 'Perusahaan', 'Telp Kantor', 'Telp HP/WA', 'Email', 'Acara', 'Tanggal', 'Catatan'];
             // Escape CSV helper
             const escapeCSV = (str) => {
                 if (str === null || str === undefined) str = '';
@@ -891,7 +921,7 @@ Contoh JSON:
             };
             
             const rows = contacts.map(c => 
-                [c.nama, c.jabatan, c.perusahaan, c.telp_kantor, c.telp_hp, c.email]
+                [c.nama, c.jabatan, c.perusahaan, c.telp_kantor, c.telp_hp, c.email, c.acara, c.tanggal, c.catatan]
                 .map(escapeCSV)
                 .join(',')
             );
@@ -940,7 +970,7 @@ Contoh JSON:
         }
 
         function createVCF(contact) {
-            const { nama, jabatan, perusahaan, telp_kantor, telp_hp, email } = contact;
+            const { nama, jabatan, perusahaan, telp_kantor, telp_hp, email, acara, tanggal, catatan } = contact;
             
             let vcfContent = `BEGIN:VCARD
 VERSION:3.0
@@ -966,6 +996,14 @@ N:${lastName};${firstName};;;
             }
             // Telp Kantor
             if (telp_kantor) vcfContent += `TEL;type=WORK;type=VOICE:${telp_kantor}\n`;
+
+            // Tambahkan data baru ke catatan
+            let noteContent = '';
+            if (acara) noteContent += `Acara: ${acara}\\n`;
+            if (tanggal) noteContent += `Tanggal: ${tanggal}\\n`;
+            if (catatan) noteContent += `Catatan: ${catatan}\\n`;
+            if (noteContent) vcfContent += `NOTE:${noteContent.trim()}\n`;
+
 
             vcfContent += `END:VCARD`;
 
