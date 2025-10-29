@@ -80,7 +80,7 @@
                 <div class="w-8"></div> <!-- Spacer -->
                 <div class="text-center">
                     <h1 class="text-2xl sm:text-3xl font-bold text-white">CANTUNA</h1>
-                    <p class="text-xs text-gray-400 mt-1">SCANNER KARTU NAMA Powered by AI</p>
+                    <p class="text-xs text-gray-400 mt-1">SCANNER KARTU NAMA Powered by Gemini AI</p>
                     <img src="logo-cantuna.png" alt="Logo Cantuna" class="mx-auto mt-4 w-36">
                 </div>
                 <button id="settings-btn" class="text-gray-400 hover:text-white w-8 flex-shrink-0">
@@ -437,7 +437,7 @@
             cameraControls.classList.add('hidden');
         }
 
-        function captureImage() {
+        async function captureImage() {
             if (!videoStream) return;
 
             const canvas = document.createElement('canvas');
@@ -446,12 +446,24 @@
             const context = canvas.getContext('2d');
             context.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
 
-            const imageDataUrl = canvas.toDataURL('image/jpeg');
-            imagePreview.src = imageDataUrl;
-            imagePreview.classList.remove('hidden');
-            
+            const originalImageDataUrl = canvas.toDataURL('image/jpeg');
             stopCameraStream();
-            processImage(imageDataUrl);
+
+            try {
+                // Prapemrosesan gambar
+                const processedImageDataUrl = await preprocessImage(originalImageDataUrl);
+                // Tampilkan gambar yang sudah diproses
+                imagePreview.src = processedImageDataUrl;
+                imagePreview.classList.remove('hidden');
+                // Kirim gambar yang sudah diproses ke OCR
+                processImage(processedImageDataUrl);
+            } catch (err) {
+                console.error("Gagal memproses gambar:", err);
+                setStatus('Gagal memproses gambar.', true);
+                // Jika gagal, tampilkan gambar asli
+                imagePreview.src = originalImageDataUrl;
+                imagePreview.classList.remove('hidden');
+            }
         }
 
         // === Fungsi Tesseract OCR ===
@@ -497,6 +509,44 @@
             } finally {
                 loadingOverlay.classList.add('hidden');
             }
+        }
+
+        async function preprocessImage(imageDataUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // 1. Ubah ukuran gambar (resize)
+                    const MAX_WIDTH = 1024;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height = (MAX_WIDTH / width) * height;
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Gambar ulang gambar dengan ukuran baru
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 2. Ubah menjadi grayscale
+                    ctx.filter = 'grayscale(100%)';
+                    ctx.drawImage(canvas, 0, 0); // Terapkan filter
+
+                    // Dapatkan data URL dari canvas yang sudah diproses
+                    const processedImageDataUrl = canvas.toDataURL('image/jpeg', 0.9); // Kualitas 90%
+                    resolve(processedImageDataUrl);
+                };
+                img.onerror = (err) => {
+                    reject(err);
+                };
+                img.src = imageDataUrl;
+            });
         }
 
         async function processImage(image) {
@@ -1284,12 +1334,26 @@ N:${lastName};${firstName};;;
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.classList.remove('hidden');
+                reader.onload = async (e) => {
+                    const originalImageDataUrl = e.target.result;
                     videoFeed.classList.add('hidden');
                     stopCameraStream();
-                    processImage(e.target.result);
+
+                    try {
+                        // Prapemrosesan gambar
+                        const processedImageDataUrl = await preprocessImage(originalImageDataUrl);
+                        // Tampilkan gambar yang sudah diproses
+                        imagePreview.src = processedImageDataUrl;
+                        imagePreview.classList.remove('hidden');
+                        // Kirim gambar yang sudah diproses ke OCR
+                        processImage(processedImageDataUrl);
+                    } catch (err) {
+                        console.error("Gagal memproses gambar:", err);
+                        setStatus('Gagal memproses gambar.', true);
+                        // Jika gagal, tampilkan gambar asli
+                        imagePreview.src = originalImageDataUrl;
+                        imagePreview.classList.remove('hidden');
+                    }
                 };
                 reader.readAsDataURL(file);
             }
