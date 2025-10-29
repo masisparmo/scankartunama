@@ -67,7 +67,12 @@
     <div class="w-full max-w-2xl mx-auto space-y-6">
         
         <!-- === KARTU UTAMA === -->
-        <div class="bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 w-full">
+        <div class="bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 w-full relative">
+            <button id="settings-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </button>
             <h1 class="text-3xl font-bold text-center text-white mb-4">Pemindai Kartu Nama</h1>
 
             <!-- === INPUT KUNCI API BARU === -->
@@ -233,6 +238,28 @@
         </div>
     </div>
 
+    <!-- === MODAL KUNCI API === -->
+    <div id="api-key-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div id="modal-dialog" class="bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 w-full max-w-lg relative">
+            <button id="modal-close-x-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white mb-4">Pengaturan Kunci API</h2>
+
+            <div id="modal-content-host">
+                <!-- API Key form will be moved here by JavaScript -->
+            </div>
+
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="modal-close-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition">Tutup</button>
+                <button id="modal-save-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">Simpan</button>
+            </div>
+        </div>
+    </div>
+    <!-- === AKHIR MODAL KUNCI API === -->
+
     <!-- === SCRIPT UTAMA === -->
     <script type="module">
         // === Referensi Elemen DOM ===
@@ -286,6 +313,15 @@
         const iconEyeOpen = document.getElementById('icon-eye-open');
         const iconEyeClosed = document.getElementById('icon-eye-closed');
         const apiKeyContainer = document.getElementById('api-key-container');
+
+        // === Referensi DOM Modal ===
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const modalDialog = document.getElementById('modal-dialog');
+        const modalContentHost = document.getElementById('modal-content-host');
+        const settingsBtn = document.getElementById('settings-btn');
+        const modalCloseXBtn = document.getElementById('modal-close-x-btn');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalSaveBtn = document.getElementById('modal-save-btn');
 
 
         let tesseractWorker = null;
@@ -958,12 +994,28 @@ N:${lastName};${firstName};;;
         }
 
 
+        // === Logika Modal Kunci API ===
+        function showApiKeyModal() {
+            apiKeyModal.classList.remove('hidden');
+        }
+
+        function hideApiKeyModal() {
+            apiKeyModal.classList.add('hidden');
+        }
+
+        // Pindahkan form asli ke dalam modal saat script dimuat
+        modalContentHost.appendChild(apiKeyContainer);
+
+
         // === Inisialisasi Aplikasi ===
         document.addEventListener('DOMContentLoaded', async () => {
             // BARU: Muat Kunci API dari localStorage
             const savedApiKey = localStorage.getItem('geminiApiKey');
             if (savedApiKey) {
                 geminiApiKeyInput.value = savedApiKey;
+            } else {
+                // Jika tidak ada kunci API, tampilkan modal secara otomatis
+                showApiKeyModal();
             }
 
             try {
@@ -977,6 +1029,26 @@ N:${lastName};${firstName};;;
         });
 
         // === Event Listeners ===
+
+        // === LISTENER MODAL & PENGATURAN ===
+        settingsBtn.addEventListener('click', showApiKeyModal);
+        modalCloseXBtn.addEventListener('click', hideApiKeyModal);
+        modalCloseBtn.addEventListener('click', hideApiKeyModal);
+
+        // Klik di luar dialog untuk menutup
+        apiKeyModal.addEventListener('click', (event) => {
+            if (event.target === apiKeyModal) {
+                hideApiKeyModal();
+            }
+        });
+
+        modalSaveBtn.addEventListener('click', () => {
+            // Logika penyimpanan sudah ditangani oleh listener 'input' pada geminiApiKeyInput
+            // Tombol ini sekarang hanya menutup modal.
+            // Anda bisa menambahkan validasi di sini jika perlu.
+            hideApiKeyModal();
+        });
+
 
         // === LISTENER KUNCI API BARU ===
         // BARU: Listener untuk menyimpan Kunci API ke localStorage
